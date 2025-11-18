@@ -21,22 +21,36 @@
       margin:12px 0;
       background:#fff;
     }
+
+    /* 결과 박스 + 테이블 */
     .result{
-  margin-top:12px;
-  padding:10px;
-  background:#f9fafb;
-  border-radius:8px;
-  font-size:0.9rem;
-  overflow-x:auto;          /* 가로로 넘치면 스크롤 */
-}
-
-.result table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:0.9rem;
-  min-width:420px;          /* 너무 좁아지지 않게 최소 폭 */
-}
-
+      margin-top:12px;
+      padding:10px 16px;          /* 좌우 여유 */
+      background:#f9fafb;
+      border-radius:8px;
+      font-size:0.9rem;
+      overflow-x:auto;            /* 좁은 화면에서는 가로 스크롤 */
+    }
+    .result table{
+      width:100%;
+      box-sizing:border-box;      /* 패딩 포함해서 카드 안에서만 100% */
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:0.9rem;
+    }
+    .result th,
+    .result td{
+      padding:4px 6px;
+      text-align:right;
+    }
+    .result th:first-child,
+    .result td:first-child{
+      text-align:left;
+      padding-left:0;
+    }
+    .result tr:nth-child(even){background:#f3f4f6}
+    .result-strong{font-weight:700;font-size:1rem}
+    .note{margin-top:6px;font-size:0.8rem;color:#6b7280}
 
     .row{display:flex;gap:12px;flex-wrap:wrap}
     .col{flex:1 1 240px;min-width:240px}
@@ -96,26 +110,6 @@
     }
     .btn.small{padding:7px 12px;font-size:0.88rem;border-radius:999px}
     .btn.secondary{background:#f3f4f6;color:#111;border-color:#d1d5db}
-    .result{
-      margin-top:12px;
-      padding:10px;
-      background:#f9fafb;
-      border-radius:8px;
-      font-size:0.9rem;
-    }
-    .result table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:0.9rem;
-    }
-    .result th,.result td{
-      padding:4px 2px;
-      text-align:right;
-    }
-    .result th:first-child,.result td:first-child{text-align:left}
-    .result tr:nth-child(even){background:#f3f4f6}
-    .result-strong{font-weight:700;font-size:1rem}
-    .note{margin-top:6px;font-size:0.8rem;color:#6b7280}
 
     .inline-toggle{
       display:flex;
@@ -290,7 +284,7 @@
 
       <p class="note">
         ·직종 및 수당 입력 후 통상임금 값이 0이 아니면 정상 작동.<br/>
-        ·주휴수당 성립 여부는 별도 문제라 계산에 포함하지 않음.
+        ·주휴수당 성립 여부 귀찮아서 안 함
       </p>
     </div>
 
@@ -306,6 +300,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-
-
-
