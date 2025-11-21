@@ -172,8 +172,9 @@ function buildMonthTable(){
     if(!map.has(ym))map.set(ym,{sem:0,vac:0,noaf:0});
     const cell=map.get(ym);
 
-    if(inRange(cur,vac))cell.vac++;
-    else if(inRange(cur,noAf))cell.noaf++;
+    // ★ 우선순위 변경: 방과후 미운영(4h) > 방학(8h) > 학기중
+    if(inRange(cur,noAf)) cell.noaf++;
+    else if(inRange(cur,vac)) cell.vac++;
     else cell.sem++;
 
     cur.setDate(cur.getDate()+1);
@@ -565,4 +566,3 @@ document.addEventListener("DOMContentLoaded",()=>{
   $("docTypeSelect")?.addEventListener("change",renderDocGuide);
   renderDocGuide();
 });
-
