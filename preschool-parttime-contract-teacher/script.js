@@ -240,6 +240,10 @@ function calcMonthly(){
   const R_EMP=0.0175;
   const R_IND=0.00966; // 산재보험 0.966%
 
+  // ----- 기본급 시간당 단가 (항목 분리용) -----
+  const baseSemHour = base.semMonthHours ? base.base4Sem / base.semMonthHours : 0;
+  const baseVacHour = base.vacMonthHours ? base.base8Vac / base.vacMonthHours : 0;
+
   // ----- 수당별 합계용 사전 준비 -----
   const allowanceDefs=[];
   const semMonthHours=base.semMonthHours;
@@ -282,16 +286,44 @@ function calcMonthly(){
     const daySum=sem+vac+noaf;
     totalDays+=daySum;
 
+    // ----- 월별 기본급 + 수당 별도 산출 -----
     let wage=0;
-    if(vac===0&&noaf===0&&sem>0){
-      // 방학·미운영 0, 학기중만 있는 달 = 학기중 전액 지급
-      wage=floorTo10(base.base4Sem+base.allowSem);
+    const detailLines=[];
+
+    // 기본급
+    let baseAmt=0;
+    if(vac===0 && noaf===0 && sem>0){
+      // 학기중만 있는 달 → 학기중 4시간 기준 월급 전액
+      baseAmt = floorTo10(base.base4Sem);
     }else{
-      const wSem=base.semHour*(sem+noaf)*4;
-      const wVac=base.vacHour*vac*8;
-      wage=floorTo10(wSem+wVac);
+      const partSem = baseSemHour * (sem+noaf) * 4;
+      const partVac = baseVacHour * vac * 8;
+      baseAmt = floorTo10(partSem + partVac);
+    }
+    if(baseAmt>0){
+      wage += baseAmt;
+      detailLines.push(`기본급: ${formatWon(baseAmt)}`);
     }
 
+    // 수당별
+    allowanceDefs.forEach(a=>{
+      let amt=0;
+      if(vac===0 && noaf===0 && sem>0){
+        // 학기중만 있는 달 → 학기중 수당 월액 전액
+        amt = a.semBase;
+      }else{
+        const partSem = a.semHour * (sem+noaf) * 4;
+        const partVac = a.vacHour * vac * 8;
+        amt = floorTo10(partSem + partVac);
+      }
+      if(amt>0){
+        wage += amt;
+        a.total += amt;
+        detailLines.push(`${a.name}: ${formatWon(amt)}`);
+      }
+    });
+
+    // 연 단위 분배 및 기관부담
     totalW+=wage;
     totalA+=perMonthAnnual;
 
@@ -303,19 +335,9 @@ function calcMonthly(){
     const orgSum=floorTo10(orgP+orgH+orgL+orgE+orgI);
     totalINS+=orgSum;
 
-    // ----- 수당별 월별 금액 합산 -----
-    allowanceDefs.forEach(a=>{
-      let amt=0;
-      if(vac===0&&noaf===0&&sem>0){
-        // 학기중만 있는 달 → 4시간 기준 월액 전액
-        amt=a.semBase;
-      }else{
-        const partSem=a.semHour*(sem+noaf)*4;
-        const partVac=a.vacHour*vac*8;
-        amt=partSem+partVac;
-      }
-      a.total+=floorTo10(amt);
-    });
+    const detailHtml = detailLines.length
+      ? detailLines.join("<br/>")
+      : "지급 없음";
 
     rowsHtml+=`<tr>
       <td>${ym}</td>
@@ -323,6 +345,7 @@ function calcMonthly(){
       <td>${vac}</td>
       <td>${noaf}</td>
       <td>${formatWon(wage)}</td>
+      <td style="text-align:left;font-size:0.9rem;line-height:1.4;">${detailHtml}</td>
       <td>${formatWon(perMonthAnnual)}</td>
       <td>${formatWon(wage+perMonthAnnual)}</td>
       <td>${formatWon(orgSum)}</td>
@@ -331,7 +354,7 @@ function calcMonthly(){
 
   const totalIncome=totalW+totalA;
 
-  // 월별 인건비/기관부담 테이블
+  // 월별 인건비/기관부담 테이블 (기본급·수당 내역 열 추가)
   wrap.innerHTML=`
   <div class="table-wrap">
     <table>
@@ -341,7 +364,8 @@ function calcMonthly(){
           <th>학기중</th>
           <th>방학</th>
           <th>미운영</th>
-          <th>월 임금</th>
+          <th>월 임금(합계)</th>
+          <th>기본급·수당 내역</th>
           <th>연 단위 분배</th>
           <th>월 총 지급</th>
           <th>사회보험료 기관부담금</th>
@@ -352,6 +376,7 @@ function calcMonthly(){
         <tr>
           <th colspan="4">합계</th>
           <th>${formatWon(totalW)}</th>
+          <th>-</th>
           <th>${formatWon(totalA)}</th>
           <th>${formatWon(totalIncome)}</th>
           <th>${formatWon(totalINS)}</th>
@@ -565,4 +590,3 @@ document.addEventListener("DOMContentLoaded",()=>{
   $("docTypeSelect")?.addEventListener("change",renderDocGuide);
   renderDocGuide();
 });
-
